@@ -1,0 +1,14 @@
+style:
+  MagicNumber:
+    active: false # dp/sp literals and offsets are pervasive in UI code; tokens live in core/designsystem instead.
+
+complexity:
+  LongParameterList:
+    active: true
+    constructorThreshold: 8
+    functionThreshold: 6
+
+naming:
+  active: true
+  FunctionNaming:
+    ignoreAnnotated: ["Composable"] # Compose functions are PascalCase by convention.

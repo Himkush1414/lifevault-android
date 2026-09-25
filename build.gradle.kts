@@ -6,13 +6,16 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.google.android.gms:oss-licenses-plugin:0.10.6")
+        classpath("com.google.android.gms:oss-licenses-plugin:0.13.0")
+        // AGP 9's built-in Kotlin support bundles its own Kotlin Gradle Plugin version;
+        // pin it explicitly so it matches the compose/serialization plugin versions below.
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20")
     }
 }
 
 plugins {
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
+    // No org.jetbrains.kotlin.android plugin: AGP 9's built-in Kotlin support replaces it.
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.ksp) apply false

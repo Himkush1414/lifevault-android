@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- allowBackup=false already blocks Auto Backup; this also blocks device-to-device
+     transfer and cloud backup for every path, since the vault must never leave the device
+     except through the user's own encrypted .lvault export. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+    </device-transfer>
+</data-extraction-rules>
