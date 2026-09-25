@@ -122,6 +122,8 @@ dependencies {
 
     implementation(libs.tink.android)
     implementation(libs.datastore.core) // DataStore<T> with a custom Aead-encrypting Serializer
+    implementation(libs.biometric)
+    implementation(libs.fragment.ktx)
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)

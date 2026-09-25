@@ -1,23 +1,39 @@
 package com.lifevault.app.core.navigation
 
+import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.fragment.app.FragmentActivity
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.lifevault.app.feature.lock.ForgotPinViewModel
+import com.lifevault.app.feature.lock.LockScreen
+import com.lifevault.app.feature.lock.LockSetupScreen
+import com.lifevault.app.feature.security.SecuritySettingsScreen
 
 /**
  * Every route from [Routes] wired to [PlaceholderScreen] (Section 12 step 7). Each
  * later step (9, 11–24) swaps its route's placeholder for the real screen composable
  * here — the route itself, and everything that navigates to it, doesn't change.
+ *
+ * This is the app's composition root, so — unlike code under `feature`, which never
+ * depends on `core.navigation` — it's the one place allowed to import every feature screen.
  */
 @Composable
 fun LifeVaultNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
     NavHost(navController = navController, startDestination = Routes.Home, modifier = modifier) {
         composable<Routes.Onboarding> { PlaceholderScreen("Onboarding") }
         composable<Routes.Permissions> { PlaceholderScreen("Permissions") }
-        composable<Routes.LockSetup> { PlaceholderScreen("Lock setup") }
-        composable<Routes.Lock> { PlaceholderScreen("Lock") }
+        composable<Routes.LockSetup> {
+            LockSetupScreen(onFinished = { navController.popBackStack() })
+        }
+        composable<Routes.Lock> {
+            LockRouteContent(onForgotPinSucceeded = { navController.navigate(Routes.LockSetup) })
+        }
         composable<Routes.Home> { PlaceholderScreen("Home") }
         composable<Routes.Documents> { PlaceholderScreen("Documents") }
         composable<Routes.Categories> { PlaceholderScreen("Categories") }
@@ -31,11 +47,37 @@ fun LifeVaultNavHost(navController: NavHostController, modifier: Modifier = Modi
         composable<Routes.Reminders> { PlaceholderScreen("Reminders") }
         composable<Routes.Search> { PlaceholderScreen("Search") }
         composable<Routes.Settings> { PlaceholderScreen("Settings") }
-        composable<Routes.SecuritySettings> { PlaceholderScreen("Security & app lock") }
+        composable<Routes.SecuritySettings> { SecuritySettingsScreen() }
         composable<Routes.Backup> { PlaceholderScreen("Backup & restore") }
         composable<Routes.Restore> { PlaceholderScreen("Restore") }
         composable<Routes.Paywall> { PlaceholderScreen("LifeVault Pro") }
         composable<Routes.Trash> { PlaceholderScreen("Trash") }
         composable<Routes.About> { PlaceholderScreen("About & licences") }
     }
+}
+
+/** Wires S05's "Forgot PIN?" to Section 8.4's device-credential verification. */
+@Composable
+private fun LockRouteContent(onForgotPinSucceeded: () -> Unit) {
+    val activity = LocalActivity.current as? FragmentActivity
+    val authenticator = hiltViewModel<ForgotPinViewModel>().authenticator
+
+    val legacyLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) onForgotPinSucceeded()
+    }
+
+    LockScreen(
+        onForgotPin = {
+            if (activity == null) return@LockScreen
+            if (authenticator.canUseBiometricPromptPath()) {
+                authenticator.authenticateWithBiometricPrompt(activity) { success ->
+                    if (success) onForgotPinSucceeded()
+                }
+            } else if (authenticator.hasDeviceScreenLock()) {
+                authenticator.confirmDeviceCredentialIntent()?.let(legacyLauncher::launch)
+            }
+            // No device screen lock at all: Section 8.4 step 3 (Restore from backup /
+            // Erase and start fresh) — TODO(step 20 - backup & restore UI).
+        },
+    )
 }

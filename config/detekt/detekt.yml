@@ -11,6 +11,9 @@ complexity:
     constructorThreshold: 8
     functionThreshold: 6
     ignoreAnnotated: ["Composable"] # Compose components conventionally take one param per slot/style.
+  LongMethod:
+    active: true
+    ignoreAnnotated: ["Composable"] # Compose screen bodies are declarative UI trees, not procedural logic.
   TooManyFunctions:
     active: true
     thresholdInObjects: 20 # a policy object like FeatureGate is one boolean check per spec row.
