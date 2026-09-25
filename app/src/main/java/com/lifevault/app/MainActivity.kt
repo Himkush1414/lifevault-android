@@ -5,19 +5,14 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.lifevault.app.core.designsystem.color.LifeVaultTheme
+import com.lifevault.app.core.navigation.LifeVaultAppScaffold
 import dagger.hilt.android.AndroidEntryPoint
 
-// TODO(step 7 - navigation skeleton): replace the placeholder body with NavigationSuiteScaffold
-// and the lock-gate-wrapped NavHost (Section 3.4).
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -31,20 +26,11 @@ class MainActivity : ComponentActivity() {
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
 
         setContent {
-            LifeVaultPlaceholderTheme {
+            LifeVaultTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = "LifeVault")
-                    }
+                    LifeVaultAppScaffold()
                 }
             }
         }
     }
-}
-
-// TODO(step 2 - design system): replace with core/designsystem's LifeVaultTheme
-// (light/dark color schemes, Inter typography, motion tokens — Section 4).
-@Composable
-private fun LifeVaultPlaceholderTheme(content: @Composable () -> Unit) {
-    MaterialTheme(content = content)
 }
