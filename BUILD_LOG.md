@@ -142,3 +142,47 @@ performed — no Android Studio/emulator in this environment.*
 
 *Accept check status: `./gradlew lint detekt test koverVerifyDebug
 :app:assembleDebug` all green. Domain line coverage 97.6% (bound: 95%).*
+
+## Step 4 — Security core
+
+- **DataStore format**: the spec names the encrypted prefs file `secure_prefs.pb`,
+  implying Proto DataStore. Used core `DataStore<T>` with a hand-written
+  `Serializer<SecurePrefsData>` instead (kotlinx.serialization JSON, then
+  Aead-encrypted as one blob) rather than the codegen'd Proto DataStore —
+  every value is opaque ciphertext either way, so Proto's schema/type-safety
+  benefit doesn't apply, and it avoids adding the protobuf-gradle-plugin
+  build dependency for no real gain. `SecurePrefsData` currently has just
+  `dbPassphraseBase64`; PIN/lock/entitlement/backup-key fields get added to
+  it exactly when the step that needs them (8, 9, 10) is built, not before.
+- **Wrapped Tink keysets aren't inside `secure_prefs`**: Section 8.2's chain
+  ("Keystore wraps Tink keyset encrypts secure_prefs") only makes sense if
+  the wrapped keyset lives *outside* the store it decrypts — otherwise
+  there's no way to get the Aead needed to read the store in the first
+  place. Persisted the two wrapped keysets as their own small files
+  (`security/prefs_keyset.bin`, `security/files_keyset.bin`, atomic
+  tmp-then-rename) instead.
+- **Instrumented vs. unit tests**: the accept check says "instrumented
+  tests," and Android Keystore genuinely cannot be exercised from a local
+  JVM unit test — it's a real hardware/TEE-backed system service, not
+  something Robolectric's shadows cover reliably for symmetric AES keys.
+  Wrote the instrumented tests properly (`KeyManagerInstrumentedTest`,
+  `TinkKeysetStoreInstrumentedTest`, `SecurePrefsInstrumentedTest` —
+  idempotent key creation, round-trip, AAD-mismatch and tamper rejection,
+  cross-instance persistence) and confirmed they *compile*
+  (`compileDebugAndroidTestKotlin`), but they have not been run — no
+  emulator/device in this environment. What I could verify locally: Tink's
+  own Aead/StreamingAead primitives (the same templates and API surface
+  `TinkKeysetStore` uses, just without the Keystore-wrapping layer) via real
+  running JVM unit tests, including a large-file streaming round-trip and
+  tamper/AAD-mismatch rejection.
+- **Deprecation warnings**: `TinkProtoKeysetFormat.serializeKeyset`/
+  `parseKeyset` are flagged deprecated by the compiler in this Tink version
+  but remain the documented way to move a cleartext keyset in/out of Tink's
+  own encryption boundary; `KeysetHandle.getPrimitive` was switched to the
+  non-deprecated `getPrimitive(RegistryConfiguration.get(), Class)` overload.
+  Not blocking (compiler warnings, not lint errors) — left as a known
+  follow-up rather than chasing an unclear newer API.
+
+*Accept check status: `./gradlew lint detekt test koverVerifyDebug
+:app:assembleDebug` all green. Instrumented tests written for Step 4's
+Keystore-dependent classes but not executed (no device/emulator here).*
