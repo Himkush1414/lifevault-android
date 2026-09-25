@@ -7,6 +7,7 @@ complexity:
     active: true
     constructorThreshold: 8
     functionThreshold: 6
+    ignoreAnnotated: ["Composable"] # Compose components conventionally take one param per slot/style.
 
 naming:
   active: true
