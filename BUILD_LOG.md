@@ -244,3 +244,34 @@ lifecycle, uniqueness checks) doesn't touch anything Android-specific.
 *Accept check status: `./gradlew lint detekt test koverVerifyDebug
 :app:assembleDebug` all green — all 25 new repository tests actually ran and
 passed (not compile-only).*
+
+## Step 7 — Navigation skeleton
+
+- **Compose UI tests need a device too**: `createComposeRule()` and Compose's
+  test harness bind to a real Android runtime the same way Keystore/SQLCipher
+  do, so `LifeVaultNavHostTest` (every route reachable, back navigation)
+  follows the same pattern as Steps 4/5 — written correctly, confirmed to
+  *compile*, not executed. Used the newer
+  `androidx.compose.ui.test.junit4.v2.createComposeRule` (the compiler
+  flagged the v1 one as deprecated) — `StandardTestDispatcher`-based, no
+  behavioural difference for this test's purposes.
+- **Bottom nav show/hide re-hosts the NavHost**: showing the adaptive nav bar
+  only on the 4 top-level screens (Section 3.1) means
+  `LifeVaultAppScaffold` conditionally wraps `LifeVaultNavHost` in
+  `NavigationSuiteScaffold` or not, based on the current destination. The
+  `NavHostController` is hoisted above both branches so the back stack
+  itself survives the switch, but the NavHost's Compose subtree gets a new
+  slot each time (different structural position in the two branches), so
+  screen composables re-enter rather than just re-laying-out when a user
+  crosses the top-level/non-top-level boundary. Not visible with placeholder
+  screens; worth revisiting if it causes a flicker once real screens (with
+  their own animation/scroll state) land.
+- **S11/S14 (modal bottom sheets)** got ordinary `NavHost` routes for now
+  (`AddSource`, `ReminderEditor`) rather than genuine `ModalBottomSheet`
+  presentation — Navigation Compose's dialog-destination support is the
+  right tool for that, but wiring it now would be speculative before Step
+  11/13 actually build those flows.
+
+*Accept check status: `./gradlew lint detekt test koverVerifyDebug
+:app:assembleDebug` all green. Navigation UI tests written but not executed
+(no device/emulator here).*
