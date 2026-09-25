@@ -113,3 +113,32 @@ green. No emulator run performed (none available) — deferred to the owner.*
 green (62 vector drawables including the 3 launcher-icon layers, all
 reachable/used). Visual preview rendering and automated contrast checks not
 performed — no Android Studio/emulator in this environment.*
+
+## Step 3 — Domain layer
+
+- **Coverage tooling**: the spec's accept check ("≥95% unit-test coverage of
+  domain") needs a real measurement tool, which wasn't specified. Added
+  Kotlinx Kover (JetBrains, free, simpler Android wiring than JaCoCo) with a
+  verification rule scoped to `com.lifevault.app.core.domain` at a 95%
+  minimum line-coverage bound. Currently 97.6%. `./gradlew koverVerifyDebug`
+  fails the build below the bound, so this is a real gate, not a one-time
+  check.
+- **Scope decision**: built only the four things Step 3 explicitly names
+  (`DocumentStatus`/StatusPill rules, fire-time math, `FeatureGate`,
+  `Clock`/`DispatcherProvider`) as pure functions over primitives —
+  deliberately did *not* create full domain model classes mirroring the
+  Section 5.3 Room entities yet. Those entities don't exist until Step 5;
+  duplicating their shape now, before the mapping code that would use it
+  (Step 6 repositories), would be speculative. `ReminderFireInput` is the one
+  small bundling type, added only because the Section 7.2 formula needs
+  several fields together for testability.
+- **detekt tuning**: raised `TooManyFunctions` for objects (a policy object
+  like `FeatureGate` is legitimately one function per spec table row) and
+  `ReturnCount` to 4 (guard-clause early returns read better than nested
+  `if/else` for eligibility checks).
+- StatusPill's ">60 days → 'MMM yyyy'" bucket is the one deliberate exception
+  to "never hard-code a date pattern" (Section 4.8) — that exact compact
+  format is spec-named for this one pill state, not a general screen date.
+
+*Accept check status: `./gradlew lint detekt test koverVerifyDebug
+:app:assembleDebug` all green. Domain line coverage 97.6% (bound: 95%).*
