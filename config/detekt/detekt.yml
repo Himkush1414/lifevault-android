@@ -1,6 +1,9 @@
 style:
   MagicNumber:
     active: false # dp/sp literals and offsets are pervasive in UI code; tokens live in core/designsystem instead.
+  ReturnCount:
+    active: true
+    max: 4 # guard-clause early returns for validation are more readable than nested if/else.
 
 complexity:
   LongParameterList:
@@ -8,6 +11,9 @@ complexity:
     constructorThreshold: 8
     functionThreshold: 6
     ignoreAnnotated: ["Composable"] # Compose components conventionally take one param per slot/style.
+  TooManyFunctions:
+    active: true
+    thresholdInObjects: 20 # a policy object like FeatureGate is one boolean check per spec row.
 
 naming:
   active: true

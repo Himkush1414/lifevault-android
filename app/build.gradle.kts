@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.kover)
     id("com.google.android.gms.oss-licenses-plugin")
 }
 
@@ -64,6 +65,24 @@ android {
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+}
+
+// Enforces Section 12 step 3's "≥95% unit-test coverage of domain" accept check.
+kover {
+    reports {
+        variant("debug") {
+            filters {
+                includes {
+                    packages("com.lifevault.app.core.domain")
+                }
+            }
+            verify {
+                rule("Domain layer coverage") {
+                    minBound(95)
+                }
+            }
+        }
+    }
 }
 
 dependencies {

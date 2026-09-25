@@ -25,6 +25,7 @@ mlkitTextRecognition = "16.0.1"
 ossLicenses = "17.5.2"
 detekt = "1.23.8"
 ktlintGradle = "14.2.0"
+kover = "0.9.9"
 junit = "4.13.2"
 junit5 = "5.11.4"
 mockk = "1.14.11"
@@ -117,3 +118,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 room = { id = "androidx.room", version.ref = "room" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintGradle" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
