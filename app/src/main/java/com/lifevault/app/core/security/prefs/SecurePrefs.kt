@@ -22,6 +22,17 @@ class SecurePrefs @Inject constructor(private val dataStore: DataStore<SecurePre
         dataStore.updateData { it.copy(dbPassphraseBase64 = encodeBase64(passphrase)) }
     }
 
+    suspend fun snapshot(): SecurePrefsData = data.first()
+
+    /** General-purpose read-modify-write, for callers (e.g. LockManager) owning several
+     * related fields at once rather than one value per accessor method. */
+    suspend fun update(transform: (SecurePrefsData) -> SecurePrefsData) {
+        dataStore.updateData(transform)
+    }
+
+    fun encodeBytes(bytes: ByteArray): String = encodeBase64(bytes)
+    fun decodeBytes(value: String): ByteArray = decodeBase64(value)
+
     /** Section 8.7 "Erase all data": drops every field back to defaults. */
     suspend fun clear() {
         dataStore.updateData { SecurePrefsData() }
