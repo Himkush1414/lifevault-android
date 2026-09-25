@@ -63,3 +63,53 @@ column B) until verified on a real device.
 
 *Accept check status: `./gradlew :app:assembleDebug lint detekt test` all
 green. No emulator run performed (none available) — deferred to the owner.*
+
+## Step 2 — Design system
+
+- **Inter font**: Google Fonts now ships Inter only as a single variable font
+  (`opsz,wght` axes) — the static per-weight TTFs the spec assumes no longer
+  exist upstream. Reproduced them: downloaded the variable font, used
+  `fontTools.varLib.instancer` to pin static instances at weight 400/500/600
+  (opsz 14), then `fontTools.subset` to Latin + Latin-Ext + ₹
+  (`U+0000-024F,U+20B9,U+2000-209F`). Result is 3×~140KB (~420KB total) —
+  a bit over the spec's "~300KB" estimate but the same order of magnitude;
+  tighter subsetting was possible but not worth the added fragility.
+  fontTools/pip needed `--break-system-packages` (no venv module, no sudo,
+  Debian's externally-managed-environment guard) — user-space only, doesn't
+  touch system Python.
+- **Icons**: Material Symbols has no official Android VectorDrawable export
+  path without Android Studio's Asset Studio, which isn't available here.
+  Instead: fetched each icon's SVG from `google/material-design-icons`
+  (`symbols/web/<name>/materialsymbolsrounded/<name>_24px.svg` — the default
+  variant is already weight 400 / grade 0 / opsz 24 / fill 0, matching
+  Section 4.4 exactly), extracted the `<path d>` data, and wrapped it in a
+  vector drawable with `<group android:translateY="960">` to convert the
+  source SVGs' `viewBox="0 -960 960 960"` coordinate convention into
+  Android's origin-at-top-left viewport. One spec icon name doesn't exist in
+  Material Symbols: **`laptop`** — there is no plain "laptop" glyph, only
+  `laptop_mac`/`laptop_windows`/`laptop_chromebook`. Used `laptop_mac`, the
+  conventional generic-laptop symbol (matches old Material Icons' equivalent).
+- **Design catalog screen**: added to `src/debug/` per the spec, but *not*
+  wired as `MainActivity`'s content in either build type yet. Wiring it in
+  now would mean building a debug/release source-set swap (matching function
+  signatures in both source sets) purely to have Step 7 immediately replace
+  it with real navigation — deferred that plumbing to Step 7. The screen
+  compiles, is exercised by its own `@Preview` functions (light/dark/200%
+  font, per the accept check), and every icon/component it references is
+  therefore reachable — lint's `UnusedResources` confirmed none of the 59
+  icons are dead code.
+- **detekt**: `LongParameterList` now ignores `@Composable` functions —
+  Compose components conventionally take one parameter per visual slot/style
+  (Material3's own `Button`/`TextField` do the same), so the default
+  threshold of 6 was firing on every non-trivial component.
+- **No emulator/device**: the accept check's "previews in light/dark/200%
+  font; contrast checks pass" is normally verified by rendering `@Preview`
+  composables in Android Studio and running the Accessibility Test Framework
+  on a device/emulator — neither is available here. The `@Preview` functions
+  are written and compile correctly; actually rendering and running contrast
+  checks is deferred to the owner opening the project in Android Studio.
+
+*Accept check status: `./gradlew :app:assembleDebug lint detekt test` all
+green (62 vector drawables including the 3 launcher-icon layers, all
+reachable/used). Visual preview rendering and automated contrast checks not
+performed — no Android Studio/emulator in this environment.*
