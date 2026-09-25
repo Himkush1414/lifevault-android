@@ -228,3 +228,19 @@ Keystore-dependent classes but not executed (no device/emulator here).*
 :app:assembleDebug` all green; `app/schemas/.../1.json` exported and
 committed. Instrumented DB tests written but not executed (no
 device/emulator here).*
+
+## Step 6 — Repositories
+
+Few surprises here — the only real judgment call was package placement:
+Section 2.1's project structure doesn't name a `repository` package
+explicitly, so used `core/repository/` (sibling to `core/database`,
+`core/domain`), matching how every other cross-feature layer is organised.
+Repository tests run against hand-written fake DAOs + `Clock.fixed(...)`
+rather than a real (SQLCipher) database — these are genuinely local JVM unit
+tests (the first fully-executed tests since Step 3), not instrumented ones,
+since repository-level business logic (suppression-at-save, trash
+lifecycle, uniqueness checks) doesn't touch anything Android-specific.
+
+*Accept check status: `./gradlew lint detekt test koverVerifyDebug
+:app:assembleDebug` all green — all 25 new repository tests actually ran and
+passed (not compile-only).*
