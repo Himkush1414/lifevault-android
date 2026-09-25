@@ -15,6 +15,7 @@ complexity:
     active: true
     thresholdInObjects: 20 # a policy object like FeatureGate is one boolean check per spec row.
     thresholdInInterfaces: 20 # Room DAOs are conventionally many narrow, single-purpose queries.
+    thresholdInClasses: 20 # repositories wrap many narrow DAO methods, same shape as the DAOs themselves.
 
 naming:
   active: true
