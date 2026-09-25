@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.kover)
+    alias(libs.plugins.room)
     id("com.google.android.gms.oss-licenses-plugin")
 }
 
@@ -67,6 +68,11 @@ detekt {
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
 }
 
+// Section 5.6: exportSchema = true, schemas committed under app/schemas/.
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 // Enforces Section 12 step 3's "≥95% unit-test coverage of domain" accept check.
 kover {
     reports {
@@ -115,6 +121,12 @@ dependencies {
 
     implementation(libs.tink.android)
     implementation(libs.datastore.core) // DataStore<T> with a custom Aead-encrypting Serializer
+
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+    implementation(libs.sqlcipher.android)
+    androidTestImplementation(libs.room.testing)
 
     implementation(libs.oss.licenses)
 
