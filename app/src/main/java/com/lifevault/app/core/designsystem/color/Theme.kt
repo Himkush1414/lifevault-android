@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.lifevault.app.core.designsystem.shape.LifeVaultShapes
 import com.lifevault.app.core.designsystem.type.LifeVaultTypography
 
 internal val LifeVaultLightColorScheme = lightColorScheme(
@@ -111,6 +112,7 @@ fun LifeVaultTheme(
         MaterialTheme(
             colorScheme = colorScheme,
             typography = LifeVaultTypography,
+            shapes = LifeVaultShapes.materialShapes,
             content = content,
         )
     }
