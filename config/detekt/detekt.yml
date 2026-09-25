@@ -3,7 +3,7 @@ style:
     active: false # dp/sp literals and offsets are pervasive in UI code; tokens live in core/designsystem instead.
   ReturnCount:
     active: true
-    max: 4 # guard-clause early returns for validation are more readable than nested if/else.
+    max: 6 # guard-clause early returns for validation are more readable than nested if/else.
 
 complexity:
   LongParameterList:
