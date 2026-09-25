@@ -245,6 +245,59 @@ lifecycle, uniqueness checks) doesn't touch anything Android-specific.
 :app:assembleDebug` all green — all 25 new repository tests actually ran and
 passed (not compile-only).*
 
+## Step 8 — App lock
+
+Built in three commits (domain logic + PinHasher; LockManager + lifecycle
+wiring; biometrics + UI). Notes:
+
+- **"Top-50 common PINs" is a curated guess, not real breach data.** I don't
+  have an actual PIN-frequency dataset to draw from, so `COMMON_WEAK_PINS`
+  is a hand-picked list of obviously-weak patterns (repeats, date-shaped
+  numbers, keypad patterns). If real rigor matters here, the owner should
+  swap it for one derived from an actual published PIN-frequency study.
+- **Clock-tamper rule, precisely**: "stricter of the two" means whichever
+  clock (wall or `elapsedRealtime`) claims *more* remaining lockout time
+  always wins — including when a user rolls the wall clock *backward*,
+  which then makes the (now-larger) epoch-based remaining time dominate
+  over an honestly-elapsed `elapsedRealtime`. I initially wrote a test
+  asserting the opposite (that backward-rolling should let the lockout
+  expire early) and had to correct it — the literal spec wording is "stricter
+  of the two," not "whichever the user manipulated," and only the
+  max-wins formulation is actually tamper-resistant in both directions.
+- **PinHasher runs as real local JVM tests** (Steps 4/5's Keystore/SQLCipher
+  split doesn't apply here) — PBKDF2 is pure JCE, no Android Keystore
+  involved. `LockManager`'s full state machine (setup, verify, lockout
+  trigger/expiry, biometric unlock, suppression, auto-lock timing) is also
+  genuinely unit-tested, via an in-memory fake `DataStore` and a fake
+  `TimeSource` — only `KeyManager`/SQLCipher underneath are Keystore-bound
+  and untestable here (unchanged from Steps 4/5).
+- **androidx.biometric is pinned to 1.1.0**, the only stable release; 1.2.0
+  and 1.4.0 have existed as alpha-only for a long time. `MainActivity` now
+  extends `FragmentActivity` (required by `BiometricPrompt`'s constructor)
+  instead of `ComponentActivity` — a strict superset, no Compose behaviour
+  changes.
+- **Real bug, caught by the toolchain rather than by me**: a KDoc comment
+  containing the literal text `` `feature/*` `` (meant as "the `feature`
+  package") opened an unintended *nested* Kotlin block comment, silently
+  swallowing the rest of `LifeVaultNavHost.kt` and breaking compilation with
+  a confusing "unresolved reference" error at the call site instead of at
+  the actual typo. Found by diffing `/*` vs. `*/` counts. Small reminder
+  that KDoc text isn't as inert as it looks.
+- **Simplified for scope**: "App lock off requires current PIN" and the
+  full change-PIN flow (current → new → confirm) are marked as
+  `TODO(step 8 polish)` in `SecuritySettingsScreen` rather than fully built
+  — toggling app lock off currently doesn't re-verify the PIN first. Also
+  simplified: shake-animation-on-mismatch (Section 4.7) shows an error
+  message and returns to step 1, but doesn't yet animate.
+- **Instrumented-test gap, as usual**: real `BiometricPrompt`/Keystore round
+  trips need a device with enrolled biometrics; not run here.
+
+*Accept check status: `./gradlew lint detekt test koverVerifyDebug
+:app:assembleDebug` all green across all three commits. LockManager's state
+machine and PIN/lockout domain logic are genuinely unit-tested (not just
+compiled); biometric/device-credential flows are written but unverified on
+a real device.*
+
 ## Step 7 — Navigation skeleton
 
 - **Compose UI tests need a device too**: `createComposeRule()` and Compose's
