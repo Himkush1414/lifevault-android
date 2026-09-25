@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
@@ -15,16 +16,22 @@ import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.lifevault.app.core.designsystem.color.LifeVaultTheme
 import com.lifevault.app.core.navigation.LifeVaultAppScaffold
+import com.lifevault.app.core.navigation.SplashViewModel
 import com.lifevault.app.feature.security.SecuritySettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
 
+    private val splashViewModel: SplashViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // S01 (Section 3.3): held until the Onboarding-vs-Home decision resolves.
+        splashScreen.setKeepOnScreenCondition { splashViewModel.startDestination.value == null }
 
         // Safe default until the real setting loads (Section 8.6: default ON).
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
@@ -45,7 +52,8 @@ class MainActivity : FragmentActivity() {
                         }
                     }
 
-                    LifeVaultAppScaffold()
+                    val startDestination by splashViewModel.startDestination.collectAsState()
+                    startDestination?.let { LifeVaultAppScaffold(it) }
                 }
             }
         }

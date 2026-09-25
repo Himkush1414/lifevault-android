@@ -16,7 +16,7 @@ import androidx.navigation.compose.rememberNavController
  * appearing/disappearing around it.
  */
 @Composable
-fun LifeVaultAppScaffold() {
+fun LifeVaultAppScaffold(startDestination: Any) {
     LockGate {
         val navController = rememberNavController()
         val currentDestination = navController.currentBackStackEntryAsState().value?.destination
@@ -40,10 +40,10 @@ fun LifeVaultAppScaffold() {
                     }
                 },
             ) {
-                LifeVaultNavHost(navController)
+                LifeVaultNavHost(navController, startDestination)
             }
         } else {
-            LifeVaultNavHost(navController)
+            LifeVaultNavHost(navController, startDestination)
         }
     }
 }
