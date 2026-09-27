@@ -29,7 +29,7 @@ class LifeVaultNavHostTest {
         composeRule.setContent {
             navController = TestNavHostController(InstrumentationRegistry.getInstrumentation().targetContext)
                 .also { it.navigatorProvider.addNavigator(androidx.navigation.compose.ComposeNavigator()) }
-            LifeVaultNavHost(navController = navController)
+            LifeVaultNavHost(navController = navController, startDestination = Routes.Home)
         }
     }
 
