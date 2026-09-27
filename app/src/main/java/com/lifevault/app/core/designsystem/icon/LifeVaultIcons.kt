@@ -35,6 +35,7 @@ object LifeVaultIcons {
         @DrawableRes val NoExpiry = R.drawable.ic_all_inclusive
         @DrawableRes val Share = R.drawable.ic_share
         @DrawableRes val Trash = R.drawable.ic_delete
+        @DrawableRes val Rotate = R.drawable.ic_rotate_right
         @DrawableRes val Pro = R.drawable.ic_workspace_premium
         @DrawableRes val Backspace = R.drawable.ic_backspace
     }

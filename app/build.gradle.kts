@@ -132,6 +132,8 @@ dependencies {
     ksp(libs.hilt.compiler)
     androidTestImplementation(libs.work.testing)
 
+    implementation(libs.mlkit.document.scanner)
+
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)

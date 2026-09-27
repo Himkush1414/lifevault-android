@@ -403,3 +403,71 @@ gap as Steps 7/9.*
 *Accept check status: `./gradlew lint detekt test koverVerifyDebug
 :app:assembleDebug` all green. Navigation UI tests written but not executed
 (no device/emulator here).*
+
+## Step 12 — Capture flows (no OCR yet)
+
+- **Three import sources, one coordinator**: `CaptureCoordinatorViewModel`
+  turns a scanner result, a Photo Picker multi-select, or a SAF PDF pick
+  into a `CaptureSession` under `cacheDir/capture/<sessionId>/` — scanner
+  and gallery pages are copied in as `page_<n>.jpg`; a PDF is streamed in
+  as `document.pdf` plus a `PdfRenderer`-rendered `thumb.jpg`. `CaptureReviewScreen`
+  then reloads that session from disk by `CaptureSessionStore.loadSession`
+  (filename convention, not an in-memory handoff) since it's a new
+  ViewModel on the far side of a nav boundary.
+- **ML Kit Document Scanner's exact API** (`com.google.mlkit.vision.documentscanner`,
+  artifact `com.google.android.gms:play-services-mlkit-document-scanner`)
+  isn't documented anywhere I could reach from here, so I extracted the AAR
+  or its transformed API jar with `javap` and read the real class/method
+  signatures directly (`GmsDocumentScannerOptions.Builder`,
+  `GmsDocumentScanning.getClient(options).getStartScanIntent(activity)` ->
+  `Task<IntentSender>`, `GmsDocumentScanningResult.fromActivityResultIntent`,
+  `.getPages()` returning a **nullable** list — same "verify the real API,
+  don't guess" approach as Step 5's SQLCipher class names). Scanner-unavailable
+  fallback (Section 6.2) is deliberately a no-op: `addOnFailureListener` just
+  doesn't launch anything, leaving Photos/PDF/Manual on the same sheet as the
+  only fallback UI — there's nothing more specific to tell the user.
+- **Rotation is metadata, not a pixel transform**: the review screen's rotate
+  button only changes `AttachmentEntity.rotationDegrees` (already in the
+  Step 5 schema as a "view rotation" column) — `ImageProcessor.process` still
+  only auto-corrects EXIF orientation. This means a rotated page's bytes on
+  disk are never re-encoded for a manual rotation; whatever screen renders
+  the attachment later has to apply `rotationDegrees` itself. Documented here
+  because it's not obvious from the review code alone why rotate doesn't
+  touch `ImageProcessor`.
+- **Save creates the `DocumentEntity` before the user has typed anything**:
+  the pipeline is capture -> review -> `documentRepository.create` with a
+  placeholder title ("Untitled document") and the "Other" category ->
+  attachments written and encrypted -> navigate straight into `Editor` for
+  that new `documentId` so the user fills in the real title/category/dates
+  immediately after. This was the simplest way to reuse `EditorViewModel`'s
+  existing edit-existing-document path without adding a second "pending
+  attachments" concept that Editor would also have to understand.
+- **Free file-limit enforcement lives in `CaptureReviewUiState`**, not in
+  the coordinator: `overLimit` reuses `FeatureGate.canAddFile` against the
+  page count so Save is disabled (with a `LimitBanner`) until the user
+  deletes pages back down to 3 (Free) — matches this step's accept
+  criterion ("free file limit enforced") without re-deriving the Free/Pro
+  numbers.
+- **Page reordering is up/down buttons, not drag-and-drop**: no drag-reorder
+  library is in the dependency graph yet and adding one felt like scope
+  creep for a review screen whose only hard requirement is "reorder,
+  rotate, delete" — the up/down `TextButton`s satisfy that without a new
+  dependency. Worth revisiting with `LazyColumn` item-reorder APIs in a
+  later polish pass (Step 24) if it feels clunky.
+- **`ic_rotate_right`** is a new Material Symbols Rounded glyph not in
+  Step 2's original 62 — fetched from the same `google/material-design-icons`
+  source used for the others and wrapped in the same `translateY(960)`
+  group convention, added to `LifeVaultIcons.Core`.
+- **No manifest changes needed**: the Photo Picker and SAF `OpenDocument`
+  are both system UI with no permission/`<queries>` declaration required on
+  the SDK levels this app targets; the scanner is a separate Play Services
+  module activity, also outside this app's own permission surface.
+
+*Accept check status: `./gradlew lint detekt test koverVerifyDebug
+:app:assembleDebug` all green. This step's own accept criterion explicitly
+requires scanning/importing on a physical device (Section 11's ownership
+table marks that manual-testing column as the user's job, not mine) — the
+capture, review, and save-pipeline code is written and compiles, but the
+scanner/gallery/PDF/PdfRenderer code paths have never actually run, same
+honest gap as every Keystore/SQLCipher/Bitmap-touching step before this
+one.*
