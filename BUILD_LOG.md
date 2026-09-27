@@ -298,6 +298,40 @@ machine and PIN/lockout domain logic are genuinely unit-tested (not just
 compiled); biometric/device-credential flows are written but unverified on
 a real device.*
 
+## Step 10 — Encrypted file store
+
+- **Extracted the pure math from `ImageProcessor`** (`ImageSizing`:
+  `inSampleSize`, target-dimensions-never-upscale, the 1.5MB retry
+  threshold) into its own object specifically so *something* in this step
+  is a real, running unit test — the Bitmap/EXIF/WebP pipeline around it is
+  unavoidably Android-runtime-only, same instrumented-test gap as every
+  Keystore/SQLCipher-touching class since Step 4.
+- **Coil 3's Fetcher API matched my best guess on the first try** —
+  `ImageSource(BufferedSource, FileSystem)` / `SourceFetchResult` /
+  `Fetcher.Factory<T>` all compiled as written, which was a pleasant
+  surprise given I had no local docs to check against; worth a second look
+  if a future step's actual on-device testing surfaces a runtime mismatch
+  between what compiles and what Coil expects at the `ImageSource` layer.
+  Disk cache is disabled via `ImageLoader.Builder(...).diskCache(null)`.
+  Memory-cache clearing on lock (Section 6.7) isn't wired yet — there's no
+  screen holding this loader to clear it from until a real screen (Step 11+)
+  uses it.
+- **EXIF stripping is implicit, not explicit**: decoding into a fresh
+  `Bitmap` and re-encoding from scratch means the WebP/JPEG encoder never
+  writes an EXIF block back — there's no separate "strip metadata" step to
+  get wrong, but also nothing to point to if this needs auditing later.
+- **Accept check split across two instrumented-test files** since the
+  30MB-image-budget case (needs `Bitmap`) and the
+  tamper/AAD/no-plaintext-in-filesDir cases (need `VaultFileStore`'s
+  Keystore-backed Tink keyset) are different concerns; both written,
+  neither executed here.
+
+*Accept check status: `./gradlew lint detekt test koverVerifyDebug
+:app:assembleDebug` all green. `ImageSizing`/`VaultPaths` are real passing
+unit tests; `VaultFileStore`/`ImageProcessor`'s device-dependent behaviour
+(30MB budget, tamper rejection, no plaintext on disk) is written as
+instrumented tests but not executed — no device/emulator here.*
+
 ## Step 7 — Navigation skeleton
 
 - **Compose UI tests need a device too**: `createComposeRule()` and Compose's
