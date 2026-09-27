@@ -127,6 +127,11 @@ dependencies {
     implementation(libs.exifinterface)
     implementation(libs.coil.compose)
 
+    implementation(libs.work.runtime.ktx)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.compiler)
+    androidTestImplementation(libs.work.testing)
+
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)

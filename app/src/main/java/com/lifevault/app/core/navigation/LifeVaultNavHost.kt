@@ -11,12 +11,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.NavDestination.Companion.hasRoute
+import com.lifevault.app.feature.detail.DocumentDetailScreen
+import com.lifevault.app.feature.editor.EditorScreen
+import com.lifevault.app.feature.editor.ReminderEditorSheet
 import com.lifevault.app.feature.lock.ForgotPinViewModel
 import com.lifevault.app.feature.lock.LockScreen
 import com.lifevault.app.feature.lock.LockSetupScreen
 import com.lifevault.app.feature.onboarding.OnboardingScreen
 import com.lifevault.app.feature.onboarding.PermissionsScreen
 import com.lifevault.app.feature.security.SecuritySettingsScreen
+import com.lifevault.app.feature.trash.TrashScreen
 
 /**
  * Every route from [Routes] wired to [PlaceholderScreen] (Section 12 step 7). Each
@@ -64,12 +68,28 @@ fun LifeVaultNavHost(
         composable<Routes.Home> { PlaceholderScreen("Home") }
         composable<Routes.Documents> { PlaceholderScreen("Documents") }
         composable<Routes.Categories> { PlaceholderScreen("Categories") }
-        composable<Routes.DocumentDetail> { PlaceholderScreen("Document detail") }
+        composable<Routes.DocumentDetail> {
+            DocumentDetailScreen(
+                onBack = { navController.popBackStack() },
+                onEdit = { documentId -> navController.navigate(Routes.Editor(documentId = documentId)) },
+            )
+        }
         composable<Routes.Viewer> { PlaceholderScreen("Viewer") }
         composable<Routes.AddSource> { PlaceholderScreen("Add document") }
         composable<Routes.CaptureReview> { PlaceholderScreen("Review") }
-        composable<Routes.Editor> { PlaceholderScreen("Editor") }
-        composable<Routes.ReminderEditor> { PlaceholderScreen("Remind me") }
+        composable<Routes.Editor> {
+            EditorScreen(
+                onSaved = { documentId ->
+                    navController.navigate(Routes.DocumentDetail(documentId)) {
+                        popUpTo<Routes.Editor> { inclusive = true }
+                    }
+                },
+                onClose = { navController.popBackStack() },
+            )
+        }
+        composable<Routes.ReminderEditor> {
+            ReminderEditorSheet(onDone = { navController.popBackStack() })
+        }
         composable<Routes.Deadlines> { PlaceholderScreen("Deadlines") }
         composable<Routes.Reminders> { PlaceholderScreen("Reminders") }
         composable<Routes.Search> { PlaceholderScreen("Search") }
@@ -78,7 +98,7 @@ fun LifeVaultNavHost(
         composable<Routes.Backup> { PlaceholderScreen("Backup & restore") }
         composable<Routes.Restore> { PlaceholderScreen("Restore") }
         composable<Routes.Paywall> { PlaceholderScreen("LifeVault Pro") }
-        composable<Routes.Trash> { PlaceholderScreen("Trash") }
+        composable<Routes.Trash> { TrashScreen(onBack = { navController.popBackStack() }) }
         composable<Routes.About> { PlaceholderScreen("About & licences") }
     }
 }

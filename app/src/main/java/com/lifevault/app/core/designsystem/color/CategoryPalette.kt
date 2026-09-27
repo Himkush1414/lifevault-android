@@ -45,3 +45,11 @@ private val DarkCategoryColors: Map<CategoryColorKey, CategoryColorPair> = mapOf
 @Composable
 fun CategoryColorKey.colorPair(darkTheme: Boolean = isSystemInDarkTheme()): CategoryColorPair =
     (if (darkTheme) DarkCategoryColors else LightCategoryColors).getValue(this)
+
+/**
+ * Maps a category's `colorKey` (Section 5.3: "one of the 12 palette keys, e.g. 'blue'" —
+ * the raw string stored in [com.lifevault.app.core.database.entity.CategoryEntity]) to
+ * its [CategoryColorKey]. Falls back to [CategoryColorKey.Grey] for an unrecognised key.
+ */
+fun categoryColorKeyOf(colorKey: String): CategoryColorKey =
+    CategoryColorKey.entries.firstOrNull { it.name.equals(colorKey, ignoreCase = true) } ?: CategoryColorKey.Grey

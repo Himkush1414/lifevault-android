@@ -11,6 +11,8 @@ object LifeVaultIcons {
 
     /** Core chrome icon map (Section 4.4). */
     object Core {
+        @DrawableRes val Close = R.drawable.ic_close
+        @DrawableRes val ArrowBack = R.drawable.ic_arrow_back
         @DrawableRes val Home = R.drawable.ic_home
         @DrawableRes val Documents = R.drawable.ic_folder_open
         @DrawableRes val Deadlines = R.drawable.ic_event

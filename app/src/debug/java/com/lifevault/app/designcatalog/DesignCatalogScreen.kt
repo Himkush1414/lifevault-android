@@ -48,6 +48,8 @@ import com.lifevault.app.core.designsystem.icon.LifeVaultIcons
 import com.lifevault.app.core.designsystem.spacing.Spacing
 
 private val CoreIcons: List<Pair<String, Int>> = listOf(
+    "Close" to LifeVaultIcons.Core.Close,
+    "ArrowBack" to LifeVaultIcons.Core.ArrowBack,
     "Home" to LifeVaultIcons.Core.Home,
     "Documents" to LifeVaultIcons.Core.Documents,
     "Deadlines" to LifeVaultIcons.Core.Deadlines,
