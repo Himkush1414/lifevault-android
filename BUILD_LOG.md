@@ -332,6 +332,47 @@ unit tests; `VaultFileStore`/`ImageProcessor`'s device-dependent behaviour
 (30MB budget, tamper rejection, no plaintext on disk) is written as
 instrumented tests but not executed — no device/emulator here.*
 
+## Step 11 — Document editor, detail & trash
+
+- **WorkManager arrived earlier than the Step 1 TODO said**: `LifeVaultApp`'s
+  comment from Step 1 deferred Hilt+WorkManager wiring to Step 21 (billing),
+  on the assumption the first real worker would be the reminder engine
+  (Step 17) or auto-backup (Step 20). Step 11's own accept check calls for a
+  30-day trash-purge worker, so that wiring (Configuration.Provider,
+  manifest's WorkManagerInitializer removal) happened now instead — the
+  reminder/backup workers in later steps just reuse it.
+- **Reminders scoped to existing documents only**: S14's sheet needs a real
+  `documentId` to attach reminders to, which a brand-new, unsaved document
+  doesn't have. Rather than threading an in-memory "draft reminders" list
+  through the editor before the document exists, new documents just get
+  Settings' default offsets automatically applied the moment they're
+  created (if they have an expiry date) — matching S13's own wireframe note
+  ("New docs get defaults from Settings"). Editing an *existing* document
+  reaches the real S14 sheet normally. A brand-new document that needs
+  different reminders than the defaults has to be saved first, then edited
+  — a real UX simplification, not just a testing shortcut.
+- **`categoryIconRes`/`categoryColorKeyOf` had to be built now, not faked**:
+  the moment any screen (S09 here) displays a document's category, showing
+  the wrong icon/color would be an obvious, immediately-visible bug — worth
+  the ~40 lines now rather than a `TODO` placeholder that every later
+  category-displaying screen would have to notice and unwind.
+- **Two icons Step 2 missed**: `close` and `arrow_back` weren't in the
+  Section 4.4 icon map I built the full set from — that list covers status/
+  category/chrome icons but not generic top-bar navigation actions. Fetched
+  the same way as Step 2's icons (SVG → vector drawable conversion script).
+- **Minor Clock-injection lapse**: `TrashScreen`'s "Deleted N days ago"
+  label calls `Instant.now()` directly instead of routing through an
+  injected `Clock`, breaking Section 2.1's "all time comes from an injected
+  Clock" rule for one display-only value. Low-stakes (it's a UI label, not
+  business logic) but worth moving into `TrashViewModel` if this file gets
+  touched again.
+
+*Accept check status: `./gradlew lint detekt test koverVerifyDebug
+:app:assembleDebug` all green. `EditorUiState`'s validation logic and the
+new icon/color-key resolvers are real unit tests; the four new screens'
+end-to-end flow needs Compose UI instrumentation — not executed here, same
+gap as Steps 7/9.*
+
 ## Step 7 — Navigation skeleton
 
 - **Compose UI tests need a device too**: `createComposeRule()` and Compose's
